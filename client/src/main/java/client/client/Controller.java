@@ -1,4 +1,4 @@
-package client;
+package client.client;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -56,6 +56,9 @@ public class Controller implements Initializable {
     private Stage stage;
     private Stage regStage;
     private RegController regController;
+    ///==============///
+    private String login;
+    ///==============///
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -68,6 +71,9 @@ public class Controller implements Initializable {
 
         if (!authenticated) {
             nickname = "";
+            ///==============///
+            History.stop();
+            ///==============///
         }
         textArea.clear();
         setTitle(nickname);
@@ -110,9 +116,17 @@ public class Controller implements Initializable {
                         while (true) {
                             String str = in.readUTF();
 
+                            if (str.equals("/end")) {
+                                throw new RuntimeException("Сервер закрыл соединение по таймауту");
+                            }
+
                             if (str.startsWith("/authok")) {
                                 nickname = str.split(" ", 2)[1];
                                 setAuthenticated(true);
+                                ///==============///
+                                textArea.appendText(History.getLast100LinesOfHistory(login));
+                                History.start(login);
+                                ///==============///
                                 break;
                             }
 
@@ -143,10 +157,22 @@ public class Controller implements Initializable {
                                         }
                                     });
                                 }
+
+                                //==============//
+                                if (str.startsWith("/yournickis ")) {
+                                    nickname = str.split(" ")[1];
+                                    setTitle(nickname);
+                                }
+                                //==============//
                             } else {
                                 textArea.appendText(str + "\n");
+                                ///==============///
+                                History.writeLine(str);
+                                ///==============///
                             }
                         }
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {
@@ -185,7 +211,10 @@ public class Controller implements Initializable {
             out.writeUTF(String.format("/auth %s %s", loginField.getText().trim().toLowerCase(),
                     passwordField.getText().trim()));
             passwordField.clear();
+            ///==============///
 
+            login = loginField.getText();
+            ///==============///
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -204,7 +233,7 @@ public class Controller implements Initializable {
 
     private void createRegWindow() {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../../resources/fxml/reg.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/reg.fxml"));
             Parent root = fxmlLoader.load();
             regStage = new Stage();
             regStage.setTitle("Reg window");

@@ -1,4 +1,4 @@
-package client;
+package client.client;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
